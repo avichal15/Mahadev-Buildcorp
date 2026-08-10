@@ -154,57 +154,67 @@ function TowerBoltModel() {
   );
 }
 
-/* --- 05 Furniture Hardware: a telescopic drawer channel ------------------ */
+/* --- 05 Furniture Hardware: drawer box on telescopic channels ------------ */
 
 function DrawerChannelModel() {
-  // Three nested members, drawn out the way they sit when half open.
+  const bearingPositions = [-0.58, -0.22, 0.14, 0.5];
+
   return (
-    <group rotation={[0.34, 0.62, 0]} scale={1.05}>
-      {/* Outer member: a U-channel that screws to the carcass. */}
-      <group>
-        <mesh position={[0, -0.2, 0]}>
-          <boxGeometry args={[2.3, 0.05, 0.42]} />
-          <meshStandardMaterial {...STEEL_DARK} />
+    <group rotation={[0.24, 0.5, 0.02]} scale={0.93} position={[0, 0.03, 0]}>
+      {/* A shallow drawer gives the channels a clear job and scale. */}
+      <group position={[0, 0.18, 0.24]}>
+        <mesh position={[0, -0.34, 0]}>
+          <boxGeometry args={[1.82, 0.09, 1.34]} />
+          <meshStandardMaterial {...VENEER} />
         </mesh>
-        {[-0.2, 0.2].map((z) => (
-          <mesh key={z} position={[0, 0, z]}>
-            <boxGeometry args={[2.3, 0.4, 0.05]} />
-            <meshStandardMaterial {...STEEL_DARK} />
+        <mesh position={[0, 0.02, 0.68]}>
+          <boxGeometry args={[2.02, 0.78, 0.13]} />
+          <meshStandardMaterial color="#c99861" roughness={0.62} metalness={0.02} />
+        </mesh>
+        <mesh position={[0, -0.02, -0.62]}>
+          <boxGeometry args={[1.82, 0.64, 0.1]} />
+          <meshStandardMaterial {...CORE} />
+        </mesh>
+        {[-0.91, 0.91].map((x) => (
+          <mesh key={x} position={[x, -0.02, 0]}>
+            <boxGeometry args={[0.1, 0.64, 1.34]} />
+            <meshStandardMaterial {...VENEER} />
           </mesh>
         ))}
-      </group>
 
-      {/* Intermediate member, slid out */}
-      <group position={[0.42, 0.06, 0]}>
-        <mesh position={[0, -0.14, 0]}>
-          <boxGeometry args={[2.1, 0.04, 0.3]} />
-          <meshStandardMaterial {...STEEL} />
-        </mesh>
-        {[-0.14, 0.14].map((z) => (
-          <mesh key={z} position={[0, 0, z]}>
-            <boxGeometry args={[2.1, 0.3, 0.04]} />
+        {/* A simple pull makes the object read immediately as a drawer. */}
+        <group position={[0, 0.04, 0.82]}>
+          <mesh rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.76, 20]} />
             <meshStandardMaterial {...STEEL} />
           </mesh>
-        ))}
+          {[-0.3, 0.3].map((x) => (
+            <mesh key={x} position={[x, 0, -0.09]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.045, 0.045, 0.2, 16]} />
+              <meshStandardMaterial {...STEEL_DARK} />
+            </mesh>
+          ))}
+        </group>
       </group>
 
-      {/* Inner member, with the fixing holes that go on the drawer box */}
-      <group position={[0.84, 0.1, 0]}>
-        <mesh>
-          <boxGeometry args={[1.95, 0.22, 0.05]} />
-          <meshStandardMaterial {...STEEL} />
-        </mesh>
-        {[-0.6, 0, 0.6].map((x) => (
-          <Hole key={x} position={[x, 0, 0.04]} r={0.04} />
-        ))}
-      </group>
-
-      {/* Ball bearings in the race */}
-      {[-0.75, -0.3, 0.15, 0.6].map((x) => (
-        <mesh key={x} position={[x, -0.06, 0.17]}>
-          <sphereGeometry args={[0.05, 14, 12]} />
-          <meshStandardMaterial {...STEEL} />
-        </mesh>
+      {/* A channel on each side, extended beyond its outer mounting rail. */}
+      {[-1.02, 1.02].map((x) => (
+        <group key={x} position={[x, -0.05, -0.1]}>
+          <mesh>
+            <boxGeometry args={[0.1, 0.32, 1.8]} />
+            <meshStandardMaterial {...STEEL_DARK} />
+          </mesh>
+          <mesh position={[Math.sign(x) * 0.075, 0.01, 0.38]}>
+            <boxGeometry args={[0.08, 0.2, 1.52]} />
+            <meshStandardMaterial {...STEEL} />
+          </mesh>
+          {bearingPositions.map((z) => (
+            <mesh key={z} position={[Math.sign(x) * 0.125, 0.13, z - 0.12]}>
+              <sphereGeometry args={[0.045, 12, 10]} />
+              <meshStandardMaterial color="#d5a45a" metalness={0.8} roughness={0.25} />
+            </mesh>
+          ))}
+        </group>
       ))}
     </group>
   );
@@ -628,10 +638,7 @@ function GeneralHardwareModel() {
 
 /* --- 11 Kitchen Hardware: a cabinet pull --------------------------------- */
 
-/**
- * A wire pull-out basket — the thing people actually picture when they hear
- * "kitchen hardware" — with the pull handle and a knob alongside it.
- */
+/** A wire pull-out basket with its integrated front pull. */
 function HandleModel() {
   const W = 1.9;
   const D = 1.05;
@@ -738,22 +745,6 @@ function HandleModel() {
             <meshStandardMaterial {...STEEL_DARK} />
           </mesh>
         ))}
-      </group>
-
-      {/* Knob alongside, for the fittings half of the category */}
-      <group position={[W / 2 + 0.42, -0.3, 0.1]}>
-        <mesh position={[0, 0.22, 0]}>
-          <sphereGeometry args={[0.2, 26, 20]} />
-          <meshStandardMaterial {...STEEL} />
-        </mesh>
-        <mesh position={[0, 0.02, 0]}>
-          <cylinderGeometry args={[0.07, 0.07, 0.24, 18]} />
-          <meshStandardMaterial {...STEEL_DARK} />
-        </mesh>
-        <mesh position={[0, -0.12, 0]}>
-          <cylinderGeometry args={[0.18, 0.15, 0.07, 24]} />
-          <meshStandardMaterial {...STEEL_DARK} />
-        </mesh>
       </group>
     </group>
   );

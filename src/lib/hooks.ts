@@ -153,6 +153,68 @@ export function useMediaQuery(query: string) {
 export const useReducedMotion = () => useMediaQuery('(prefers-reduced-motion: reduce)');
 
 /**
+ * Tracks whether a render-heavy element is near the viewport. Three.js scenes
+ * use this to stop their frame loops once the reader has moved on, instead of
+ * spending GPU time behind the map and footer.
+ */
+export function useInViewport(
+  target: RefObject<Element | null>,
+  rootMargin = '160px',
+) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const element = target.current;
+    if (!element || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin, threshold: 0.01 },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [rootMargin, target]);
+
+  return visible;
+}
+
+/**
+ * Becomes true the first time an element enters view, then deliberately never
+ * resets. Use it for one-off moments such as number counts: restarting them
+ * every time a reader nudges the scroll feels like a dashboard, not a shop.
+ */
+export function useOnceInViewport(
+  target: RefObject<Element | null>,
+  rootMargin = '0px 0px -14% 0px',
+) {
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    if (entered) return;
+
+    const element = target.current;
+    if (!element || !('IntersectionObserver' in window)) {
+      setEntered(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setEntered(true);
+        observer.disconnect();
+      },
+      { rootMargin, threshold: 0.1 },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [entered, rootMargin, target]);
+
+  return entered;
+}
+
+/**
  * Viewport width in state, tracked through three signals because none is
  * reliable alone: `resize` misses programmatic viewport changes, matchMedia
  * change misses some embedded browsers, and a ResizeObserver on the root

@@ -24,10 +24,12 @@ export default function HeroScene({
   scroll,
   pointer,
   reduced,
+  active,
 }: {
   scroll: RefObject<number>;
   pointer: RefObject<{ x: number; y: number }>;
   reduced: boolean;
+  active: boolean;
 }) {
   const [compact, setCompact] = useState(false);
 
@@ -36,7 +38,7 @@ export default function HeroScene({
       /* Capped at 1.5: the bloom pass is resolution-bound, and past this the
          frame cost is what makes the scrub look choppy rather than the maths. */
       dpr={[1, 1.5]}
-      frameloop={reduced ? 'demand' : 'always'}
+      frameloop={reduced || !active ? 'demand' : 'always'}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       camera={{ position: [0, 0.34, 4.85], fov: 36 }}
       style={{ pointerEvents: 'none' }}

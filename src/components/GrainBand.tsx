@@ -1,7 +1,7 @@
-import { lazy } from 'react';
+import { lazy, useRef } from 'react';
 import SceneBoundary from './SceneBoundary';
 import { BRANDS } from '../data/catalog';
-import { useReducedMotion } from '../lib/hooks';
+import { useInViewport, useReducedMotion } from '../lib/hooks';
 
 const GrainScene = lazy(() => import('./scene/GrainScene'));
 
@@ -20,20 +20,22 @@ function BrandRow({ duplicate = false }: { duplicate?: boolean }) {
 
 export default function GrainBand() {
   const reduced = useReducedMotion();
+  const section = useRef<HTMLElement>(null);
+  const active = useInViewport(section, '200px');
 
   return (
-    <section className="grain section" id="counter">
+    <section className="grain section" id="counter" ref={section}>
       {/* Presence is CSS's call, not JS's — a media query that mis-fires must
           never be able to change what is in the document. */}
       <div className="grain__canvas" aria-hidden="true">
         <SceneBoundary>
-          <GrainScene reduced={reduced} />
+          <GrainScene reduced={reduced} active={active} />
         </SceneBoundary>
       </div>
 
       <div className="grain__inner shell">
         <div className="split split--end">
-          <div className="reveal">
+          <div className="reveal reveal--drop">
             <p className="tag" style={{ marginBottom: '1.4rem' }}>
               01 / The counter
             </p>

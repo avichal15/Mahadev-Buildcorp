@@ -154,7 +154,7 @@ export default function Stock() {
     <section className="section" id="stock">
       <div className="shell">
         <div className="split stock__head">
-          <div className="reveal">
+          <div className="reveal reveal--drop">
             <p className="tag stock__eyebrow">02 / Shop catalogue</p>
             <h2 className="d2">
               The whole

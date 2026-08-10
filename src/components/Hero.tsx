@@ -1,6 +1,6 @@
 import { lazy, useRef } from 'react';
 import SceneBoundary from './SceneBoundary';
-import { usePointer, useReducedMotion, useScrollProgress } from '../lib/hooks';
+import { useInViewport, usePointer, useReducedMotion, useScrollProgress } from '../lib/hooks';
 import { SHOP } from '../data/catalog';
 
 const HeroScene = lazy(() => import('./scene/HeroScene'));
@@ -16,13 +16,14 @@ export default function Hero() {
   const scroll = useScrollProgress(hero);
   const pointer = usePointer();
   const reduced = useReducedMotion();
+  const active = useInViewport(hero, '240px');
 
   return (
     <section className="hero" ref={hero}>
       <div className="hero__pin">
         <div className="hero__canvas" aria-hidden="true">
           <SceneBoundary>
-            <HeroScene scroll={scroll} pointer={pointer} reduced={reduced} />
+            <HeroScene scroll={scroll} pointer={pointer} reduced={reduced} active={active} />
           </SceneBoundary>
         </div>
 
@@ -32,18 +33,16 @@ export default function Hero() {
           <div className="hero__grid">
             <div>
               <p
-                className="hero__location tag tag--bright enter"
+                className="hero__kicker tag tag--bright enter"
                 style={{ '--ed': '260ms', marginBottom: '1.6rem' } as React.CSSProperties}
               >
-                <span>Daurli, Meerut</span>
-                <i aria-hidden="true" />
-                <span>Material for every layer of the build</span>
+                Material for every layer of the build
               </p>
               <h1 className="d1 hero__title">
-                <span className="enter" style={{ '--ed': '380ms' } as React.CSSProperties}>
+                <span className="enter enter--drop" style={{ '--ed': '380ms' } as React.CSSProperties}>
                   Every layer
                 </span>
-                <em className="grad enter" style={{ '--ed': '500ms' } as React.CSSProperties}>
+                <em className="grad enter enter--drop" style={{ '--ed': '500ms' } as React.CSSProperties}>
                   in stock
                 </em>
               </h1>

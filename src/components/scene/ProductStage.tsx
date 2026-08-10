@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
+import { useInViewport } from '../../lib/hooks';
 import { PRODUCT_MODELS } from './products';
 
 function Rig({
@@ -67,15 +68,18 @@ export default function ProductStage({
   reduced: boolean;
 }) {
   const rig = RIGS[family];
+  const host = useRef<HTMLDivElement>(null);
+  const visible = useInViewport(host, '220px');
 
   return (
-    <Canvas
-      dpr={[1, 1.8]}
-      frameloop={reduced ? 'demand' : 'always'}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      camera={{ position: [0, 0.35, 5.4], fov: 32 }}
-      style={{ pointerEvents: 'none' }}
-    >
+    <div className="render-stage" ref={host}>
+      <Canvas
+        dpr={[1, 1.5]}
+        frameloop={reduced || !visible ? 'demand' : 'always'}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        camera={{ position: [0, 0.35, 5.4], fov: 32 }}
+        style={{ pointerEvents: 'none' }}
+      >
       <directionalLight position={[3.6, 4.2, 3.4]} intensity={3.2} color={rig.key} />
       <directionalLight position={[-3.2, 2.4, -4.2]} intensity={4.0} color={rig.rim} />
       <directionalLight position={[1.2, -3.4, 2.0]} intensity={0.9} color={rig.bounce} />
@@ -121,7 +125,8 @@ export default function ProductStage({
         />
       </Environment>
 
-      <Rig active={active} pointer={pointer} spin={!reduced} />
-    </Canvas>
+        <Rig active={active} pointer={pointer} spin={!reduced} />
+      </Canvas>
+    </div>
   );
 }

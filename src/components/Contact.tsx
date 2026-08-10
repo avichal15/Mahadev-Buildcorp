@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { BRANDS, CATALOG, SHOP, TOTAL_TYPES } from '../data/catalog';
+import { useOnceInViewport, useReducedMotion } from '../lib/hooks';
 
 const STATS = [
   { value: TOTAL_TYPES, label: 'Types carried' },
@@ -6,14 +8,59 @@ const STATS = [
   { value: BRANDS.length, label: 'Brands stocked' },
 ];
 
+function CountingNumber({ value, start, delay }: { value: number; start: boolean; delay: number }) {
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(() => (reduced ? value : 0));
+  const hasStarted = useRef(false);
+
+  useEffect(() => {
+    if (reduced) {
+      setShown(value);
+      return;
+    }
+    if (!start || hasStarted.current) return;
+
+    hasStarted.current = true;
+    let frame = 0;
+    let last = -1;
+    const duration = Math.min(1420, Math.max(760, 610 + value * 4));
+    const timer = window.setTimeout(() => {
+      const startedAt = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / duration);
+        const eased = 1 - (1 - progress) ** 4;
+        const next = Math.round(value * eased);
+
+        if (next !== last) {
+          last = next;
+          setShown(next);
+        }
+
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [delay, reduced, start, value]);
+
+  return <span className="proof__number" aria-hidden="true">{shown}</span>;
+}
+
 export default function Contact() {
   const { address } = SHOP;
+  const [mapInteractive, setMapInteractive] = useState(false);
+  const stats = useRef<HTMLDListElement>(null);
+  const statsInView = useOnceInViewport(stats);
 
   return (
     <section className="section contact" id="contact">
       <div className="shell">
         <div className="split split--end">
-          <div className="reveal">
+          <div className="reveal reveal--drop">
             <p className="tag contact__eyebrow">03 / Find the counter</p>
             <h2 className="d2">
               Come to
@@ -27,13 +74,27 @@ export default function Contact() {
               Tell us the size and the grade. No catalogue hunting, no sales pitch — we&rsquo;ll have
               it cut and at the counter.
             </p>
-            <div className="proof__stats">
-              {STATS.map((stat) => (
-                <div className="proof__stat" key={stat.label}>
-                  <div className="numeral grad">{stat.value}</div>
-                  <p className="tag">{stat.label}</p>
-                </div>
-              ))}
+            <div>
+              <p className="tag proof__statsTitle">Stock at a glance</p>
+              <dl className="proof__stats" ref={stats} data-live={statsInView || undefined}>
+                {STATS.map((stat, index) => (
+                  <div
+                    className="proof__stat"
+                    key={stat.label}
+                    style={{ '--sd': `${index * 130}ms` } as React.CSSProperties}
+                  >
+                    <dt>{stat.label}</dt>
+                    <dd>
+                      <CountingNumber
+                        value={stat.value}
+                        start={statsInView}
+                        delay={330 + index * 130}
+                      />
+                      <span className="sr-only">{stat.value}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
         </div>
@@ -101,34 +162,50 @@ export default function Contact() {
               </h3>
             </div>
             <p className="location__note">
-              Near Isha Apartments, Kaushalya Nagar — a straightforward stop when the drawing
+              Near Isha Apartments, Kaushalya Nagar. A straightforward stop when the drawing
               turns into a material list.
             </p>
           </div>
 
           <div className="location__map">
-            <iframe
-              title={`Map to ${SHOP.name}`}
-              src={SHOP.mapsEmbedUrl}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-            <div className="location__wash" aria-hidden="true" />
-            <div className="location__marker" aria-hidden="true">
-              <span className="location__pin" />
-              <span>
-                <strong>Mahadev</strong>
-                <small>Plywood &amp; Hardware</small>
-              </span>
+            <div className="location__mapViewport" data-interactive={mapInteractive || undefined}>
+              <iframe
+                title={`Interactive map to ${SHOP.name}`}
+                src={SHOP.mapsEmbedUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                tabIndex={mapInteractive ? 0 : -1}
+              />
             </div>
-            <a
-              className="location__directions"
-              href={SHOP.mapsUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open in Maps <span aria-hidden="true">↗</span>
-            </a>
+            <div className="location__mapBar">
+              <div className="location__marker">
+                <span className="location__pin" aria-hidden="true" />
+                <span>
+                  <strong>Mahadev Plywood &amp; Hardware</strong>
+                  <small>
+                    {address.line1}, {address.line2}
+                  </small>
+                </span>
+              </div>
+              <div className="location__mapActions">
+                <button
+                  className="location__mapToggle"
+                  type="button"
+                  aria-pressed={mapInteractive}
+                  onClick={() => setMapInteractive((current) => !current)}
+                >
+                  {mapInteractive ? 'Lock map scrolling' : 'Explore map'}
+                </button>
+                <a
+                  className="location__directions"
+                  href={SHOP.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open in Maps <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 
