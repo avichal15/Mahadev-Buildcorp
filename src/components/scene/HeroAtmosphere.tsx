@@ -229,7 +229,7 @@ export default function HeroAtmosphere({ compact = false }: { compact?: boolean 
   return (
     <>
       <SunGlow />
-      <Sawdust count={compact ? 550 : 1300} />
+      <Sawdust count={compact ? 400 : 900} />
       <Shafts />
     </>
   );

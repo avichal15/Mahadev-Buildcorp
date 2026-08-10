@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import SceneBoundary from './SceneBoundary';
-import { CATALOG, SHOP, TOTAL_LINES, familyOf, type Category } from '../data/catalog';
+import { CATALOG, SHOP, TOTAL_TYPES, familyOf, type Category } from '../data/catalog';
 import { useIsNarrow, usePointer, useReducedMotion } from '../lib/hooks';
 
 const ProductStage = lazy(() => import('./scene/ProductStage'));
@@ -86,7 +86,6 @@ function Row({
           <span className="row__title">{category.title}</span>
           <span className="row__blurb">{category.blurb}</span>
         </span>
-        <span className="row__count">{category.items.length}</span>
       </button>
 
       <div className="row__list" style={{ height: open ? height : 0 }}>
@@ -155,14 +154,17 @@ export default function Stock() {
     <section className="section" id="stock">
       <div className="shell">
         <div className="split stock__head">
-          <h2 className="d2 reveal">
-            The whole
-            <br />
-            <span className="grad ital">catalogue</span>
-          </h2>
+          <div className="reveal">
+            <p className="tag stock__eyebrow">02 / Shop catalogue</p>
+            <h2 className="d2">
+              The whole
+              <br />
+              <span className="grad ital">catalogue</span>
+            </h2>
+          </div>
           <div className="reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
             <p className="lede">
-              {TOTAL_LINES} lines across {CATALOG.length} categories, from marine ply down to a
+              {TOTAL_TYPES} types across {CATALOG.length} categories, from marine ply down to a
               single wall plug. Tap a category to turn the product over.
             </p>
             <p className="tag" style={{ marginTop: '1.4rem' }}>
@@ -192,7 +194,7 @@ export default function Stock() {
                   <p className="stage__name">{category.title}</p>
                   <p className="stage__count">
                     {String(active + 1).padStart(2, '0')} /{' '}
-                    {String(CATALOG.length).padStart(2, '0')} · {category.items.length} lines ·{' '}
+                    {String(CATALOG.length).padStart(2, '0')} · {category.items.length} types ·{' '}
                     {category.blurb.toLowerCase()}
                   </p>
                 </div>

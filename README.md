@@ -1,4 +1,4 @@
-# Mahadev Buildcorp — Plywood & Hardware
+# Mahadev Plywood & Hardware
 
 Website for Mahadev Plywood & Hardware, Daurli, Meerut.
 
@@ -29,7 +29,7 @@ Four sections:
 1. **Hero** — a **pinned, scroll-scrubbed scene**, not a screen you scroll past. The section runs 215vh (165vh on phones) and the frame sticks for that whole run while the ply stack opens under scrub, the camera dollies in, the copy parallaxes up and clears, and the veil thins. Standing in a timber yard at five in the evening: a low sun behind it, four raking light shafts, and sawdust hanging in them, with bloom turning lit veneer edges into actual light.
 2. **Counter** — the pitch, over a procedural wood-grain shader composited with `mix-blend-mode: exclusion`, plus the brand marquee.
 3. **Catalogue** — twelve hand-built product models, one per category, 165 lines total. **Above 1024px** the model sits on a sticky stage beside the category rail. **At or below 1024px that stage would be stranded off-screen above whichever card you tapped**, so the model moves into the open card instead. One `<Canvas>` either way — see `useIsNarrow` in `src/lib/hooks.ts`.
-4. **Contact** — phone, shop, hours, email, and a borderless footer.
+4. **Contact** — phone, shop, hours, email, a warm-filtered map, and a borderless footer.
 
 ## Where things live
 
@@ -41,13 +41,13 @@ Four sections:
 | `src/components/scene/HeroAtmosphere.tsx` | Sun, light shafts and sawdust. All three are additive and depth-write-free, so order matters — `renderOrder` is set deliberately. |
 | `src/components/scene/GrainField.tsx` | Wood-grain fragment shader. |
 | `src/index.css` | Tokens, type scale, layout. |
-| `public/logo.webp` | Full lockup, used in the footer. |
-| `public/logo-mark.webp` | Icon only (no text), used in the nav. |
+| `public/logo.png` | Full lockup, used in the footer. |
+| `public/logo-mark.png` | Icon only (no text), used in the nav. |
 
 ## Notes for whoever picks this up
 
 - **All imagery is original.** The product models are generated from primitives rather than photographed or sourced, so there is nothing here with a licence attached. Real photographs of the shop and stock would strengthen the page further — drop them in and they will sit comfortably alongside the 3D.
-- **The logo artwork ships white-on-black and is composited with `mix-blend-mode: screen`,** which drops the black ground to nothing and keeps the glow over whatever warmth is behind it. That is why there is no transparent-PNG cutout and why the file must stay on a black background. If you ever swap in a version on white, the blend mode has to change too.
+- **The gold logo artwork uses transparency,** so keep its alpha channel intact when replacing or optimizing the PNG files.
 - **In `scripts/build-preview.mjs`, always replace via a function, never a replacement string.** `String.replace` treats `$&` in a replacement *string* as "the matched text", and minified React contains `.replace(A, "$&/")`. Passing the bundle in as a replacement string splices the matched `<script>` tag into React's key-escaping code and silently corrupts the output.
 - **Scroll progress is sampled on rAF, not from the `scroll` event.** Lenis animates the scroll position frame by frame, so rAF is the cadence that matches what is on screen; the scroll event is coarser and some embedded browsers never fire it at all. The hook caches its layout reads and only recomputes them on resize, so the per-frame cost is one `scrollY` read.
 - **`useScrollProgress` divides by height minus one viewport,** because that is the distance a pinned child is actually held for. Divide by the full section height and the scrub finishes early, then sits dead for the rest of the section.

@@ -1,7 +1,7 @@
-import { BRANDS, CATALOG, SHOP, TOTAL_LINES } from '../data/catalog';
+import { BRANDS, CATALOG, SHOP, TOTAL_TYPES } from '../data/catalog';
 
 const STATS = [
-  { value: TOTAL_LINES, label: 'Lines carried' },
+  { value: TOTAL_TYPES, label: 'Types carried' },
   { value: CATALOG.length, label: 'Categories' },
   { value: BRANDS.length, label: 'Brands stocked' },
 ];
@@ -13,11 +13,14 @@ export default function Contact() {
     <section className="section contact" id="contact">
       <div className="shell">
         <div className="split split--end">
-          <h2 className="d2 reveal">
-            Come to
-            <br />
-            <span className="grad ital">the counter.</span>
-          </h2>
+          <div className="reveal">
+            <p className="tag contact__eyebrow">03 / Find the counter</p>
+            <h2 className="d2">
+              Come to
+              <br />
+              <span className="grad ital">the counter.</span>
+            </h2>
+          </div>
 
           <div className="proof__col reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
             <p className="lede">
@@ -87,15 +90,57 @@ export default function Contact() {
           </a>
         </div>
 
+        <section className="location reveal" aria-labelledby="location-title">
+          <div className="location__intro">
+            <div>
+              <p className="tag tag--bright">Daurli, Meerut / 250001</p>
+              <h3 className="d3 location__title" id="location-title">
+                Find the
+                <br />
+                <span className="grad ital">counter.</span>
+              </h3>
+            </div>
+            <p className="location__note">
+              Near Isha Apartments, Kaushalya Nagar — a straightforward stop when the drawing
+              turns into a material list.
+            </p>
+          </div>
+
+          <div className="location__map">
+            <iframe
+              title={`Map to ${SHOP.name}`}
+              src={SHOP.mapsEmbedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div className="location__wash" aria-hidden="true" />
+            <div className="location__marker" aria-hidden="true">
+              <span className="location__pin" />
+              <span>
+                <strong>Mahadev</strong>
+                <small>Plywood &amp; Hardware</small>
+              </span>
+            </div>
+            <a
+              className="location__directions"
+              href={SHOP.mapsUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open in Maps <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </section>
+
         <footer className="footer">
           {/* The lockup itself, rather than a giant text wordmark that had to be
               hyphenated to fit a phone. */}
           <img
             className="footer__logo"
-            src="/logo.webp"
-            alt={`${SHOP.name} — ${SHOP.legalName}`}
-            width={720}
-            height={658}
+            src="/logo.png"
+            alt={SHOP.name}
+            width={694}
+            height={664}
             loading="lazy"
           />
           <div className="footer__base">

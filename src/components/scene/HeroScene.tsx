@@ -33,7 +33,9 @@ export default function HeroScene({
 
   return (
     <Canvas
-      dpr={[1, 1.75]}
+      /* Capped at 1.5: the bloom pass is resolution-bound, and past this the
+         frame cost is what makes the scrub look choppy rather than the maths. */
+      dpr={[1, 1.5]}
       frameloop={reduced ? 'demand' : 'always'}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       camera={{ position: [0, 0.34, 4.85], fov: 36 }}

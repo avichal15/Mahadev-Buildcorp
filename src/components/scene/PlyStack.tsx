@@ -68,6 +68,9 @@ function Sheet({
   useFrame((state) => {
     if (!group.current) return;
     const t = state.clock.elapsedTime;
+    // Already damped by the parent — every sheet reads the same smoothed
+    // number, so the stack opens as one object instead of each layer chasing
+    // raw scroll on its own.
     const p = scroll.current;
 
     // Idle drift, so the stack breathes before anyone touches it.
@@ -129,6 +132,15 @@ export default function PlyStack({
   pointer: RefObject<{ x: number; y: number }>;
 }) {
   const root = useRef<THREE.Group>(null);
+  /*
+   * Scroll, damped once here and shared with every sheet.
+   *
+   * Lenis already eases the scroll position, but the raw value still arrives in
+   * discrete steps, and anything reading it directly — the ply separation
+   * especially — shows those steps as stutter. One damped source keeps the
+   * whole scene moving together.
+   */
+  const smooth = useRef(0);
   const { camera, viewport, size } = useThree();
 
   // Derived from the renderer's own measurement, so it can never disagree
@@ -145,7 +157,8 @@ export default function PlyStack({
 
   useFrame((_state, delta) => {
     if (!root.current) return;
-    const p = scroll.current;
+    smooth.current = THREE.MathUtils.damp(smooth.current, scroll.current, 7, delta);
+    const p = smooth.current;
     const { x, y } = pointer.current;
 
     // Look along the edges: the stack turns toward the pointer, damped hard so
@@ -193,7 +206,7 @@ export default function PlyStack({
 
       <group ref={root} position={[anchorX, anchorY, 0]}>
         {sheets.map((spec, i) => (
-          <Sheet key={i} spec={spec} plies={plies} scroll={scroll} />
+          <Sheet key={i} spec={spec} plies={plies} scroll={smooth} />
         ))}
       </group>
     </>

@@ -1,5 +1,5 @@
 export const SHOP = {
-  name: 'Mahadev Buildcorp',
+  name: 'Mahadev Plywood & Hardware',
   legalName: 'Mahadev Plywood & Hardware',
   tagline: 'The Preferred Partner for Carpenters & Builders.',
   phone: '9410277723',
@@ -15,6 +15,8 @@ export const SHOP = {
     pin: '250001',
   },
   mapsUrl: 'https://maps.app.goo.gl/pK4ciHmvFaW2UPMZA',
+  mapsEmbedUrl:
+    'https://www.google.com/maps?q=Mahadev%20Plywood%20And%20Hardware%20Near%20Isha%20Apartments%20Kaushalya%20Nagar%20Ekta%20Nagar%20Daurli%20Meerut%20Uttar%20Pradesh%20250001&output=embed',
 } as const;
 
 export const BRANDS = [
@@ -216,7 +218,7 @@ export const CATALOG: Category[] = [
   },
   {
     title: 'General Hardware',
-    blurb: 'Profiles, beading, brackets',
+    blurb: 'Shelf brackets, hooks and fittings',
     items: [
       'Hooks',
       'Chains',
@@ -277,8 +279,12 @@ export const CATALOG: Category[] = [
   },
 ];
 
-/** Total individual lines carried across every category. */
-export const TOTAL_LINES = CATALOG.reduce((n, c) => n + c.items.length, 0);
+/**
+ * Total distinct product types carried across every category. Called "types"
+ * rather than the trade's own word "lines", which reads as a stock-keeping term
+ * to anyone outside the counter.
+ */
+export const TOTAL_TYPES = CATALOG.reduce((n, c) => n + c.items.length, 0);
 
 /**
  * The shop really does split in two: things cut from timber, and things forged

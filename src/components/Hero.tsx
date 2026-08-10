@@ -1,7 +1,7 @@
 import { lazy, useRef } from 'react';
 import SceneBoundary from './SceneBoundary';
 import { usePointer, useReducedMotion, useScrollProgress } from '../lib/hooks';
-import { SHOP, TOTAL_LINES } from '../data/catalog';
+import { SHOP } from '../data/catalog';
 
 const HeroScene = lazy(() => import('./scene/HeroScene'));
 
@@ -32,10 +32,12 @@ export default function Hero() {
           <div className="hero__grid">
             <div>
               <p
-                className="tag tag--bright enter"
+                className="hero__location tag tag--bright enter"
                 style={{ '--ed': '260ms', marginBottom: '1.6rem' } as React.CSSProperties}
               >
-                {SHOP.legalName} — Daurli, Meerut
+                <span>Daurli, Meerut</span>
+                <i aria-hidden="true" />
+                <span>Material for every layer of the build</span>
               </p>
               <h1 className="d1 hero__title">
                 <span className="enter" style={{ '--ed': '380ms' } as React.CSSProperties}>
@@ -47,12 +49,15 @@ export default function Hero() {
               </h1>
             </div>
 
+            {/* No paragraph here on purpose: anything set at body size gets
+                thin and strange as the pinned copy fades out under scrub. The
+                headline, the call and the shop line are all that survive it. */}
             <div className="hero__aside">
-              <p className="lede enter" style={{ '--ed': '660ms' } as React.CSSProperties}>
-                Plywood, laminates and {TOTAL_LINES} lines of hardware, on the shelf for
-                Meerut&rsquo;s carpenters, contractors and builders.
+              <p className="hero__index tag enter" style={{ '--ed': '570ms' } as React.CSSProperties}>
+                <span>165 types</span>
+                <span>In stock now</span>
               </p>
-              <div className="enter" style={{ '--ed': '780ms', marginTop: '2rem' } as React.CSSProperties}>
+              <div className="enter" style={{ '--ed': '660ms' } as React.CSSProperties}>
                 <a className="cta" href={SHOP.phoneHref}>
                   <span className="cta__dot" />
                   Call {SHOP.phone}
@@ -63,11 +68,11 @@ export default function Hero() {
 
           <div
             className="hero__foot enter"
-            style={{ '--ed': '900ms', marginTop: 'clamp(38px, 6vh, 74px)' } as React.CSSProperties}
+            style={{ '--ed': '780ms', marginTop: 'clamp(38px, 6vh, 74px)' } as React.CSSProperties}
           >
             <div className="hero__scroll">
               <i />
-              <span className="tag">Scroll to open the stack</span>
+              <span className="tag">Scroll to pull the stack apart</span>
             </div>
             <p className="tag">
               Open {SHOP.hours} · {SHOP.address.line2}, {SHOP.address.city}

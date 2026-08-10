@@ -35,7 +35,7 @@ export default function GrainBand() {
         <div className="split split--end">
           <div className="reveal">
             <p className="tag" style={{ marginBottom: '1.4rem' }}>
-              Why builders keep coming back
+              01 / The counter
             </p>
             <h2 className="d2 grain__statement">
               One counter.
