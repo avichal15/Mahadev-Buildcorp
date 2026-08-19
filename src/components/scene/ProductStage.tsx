@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
-import { useInViewport } from '../../lib/hooks';
 import { PRODUCT_MODELS } from './products';
 
 function Rig({
@@ -16,6 +15,9 @@ function Rig({
 }) {
   const group = useRef<THREE.Group>(null);
   const born = useRef(0);
+  const spinAngle = useRef(0);
+  const lookX = useRef(0);
+  const lookY = useRef(0);
   const Model = PRODUCT_MODELS[active];
 
   // Restart the entrance whenever the selected product changes.
@@ -23,19 +25,39 @@ function Rig({
     born.current = 0;
   }, [active]);
 
-  useFrame((state, delta) => {
+  /*
+   * Spin is accumulated, never chased.
+   *
+   * This used to damp rotation toward `clock.elapsedTime * 0.22` — a target
+   * that keeps advancing in wall-clock time even while the canvas is paused.
+   * Any pause (frameloop dropping to 'demand', a backgrounded tab, a dropped
+   * frame) left the target far ahead of the model, and the next frame snapped
+   * to catch up. That was the jitter.
+   *
+   * Adding `delta` to an accumulator instead makes the spin depend only on time
+   * actually rendered, so a pause resumes exactly where it stopped. The pointer
+   * offset is damped separately and added on top.
+   */
+  useFrame((_state, delta) => {
     const g = group.current;
     if (!g) return;
 
-    born.current = Math.min(1, born.current + delta * 2.6);
+    // A stall must not arrive as one enormous step. Clamped to ~20fps worth.
+    const d = Math.min(delta, 0.05);
+
+    born.current = Math.min(1, born.current + d * 2.6);
     const ease = 1 - Math.pow(1 - born.current, 3);
     g.scale.setScalar(0.86 + ease * 0.14);
 
+    if (spin) spinAngle.current += d * 0.22;
+
     const { x, y } = pointer.current;
-    const idle = spin ? state.clock.elapsedTime * 0.22 : 0;
-    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, idle + x * 0.42, 3.2, delta);
-    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, -y * 0.24, 3.2, delta);
-    g.position.y = THREE.MathUtils.damp(g.position.y, (1 - ease) * -0.35, 4, delta);
+    lookX.current = THREE.MathUtils.damp(lookX.current, x * 0.42, 3.2, d);
+    lookY.current = THREE.MathUtils.damp(lookY.current, -y * 0.24, 3.2, d);
+
+    g.rotation.y = spinAngle.current + lookX.current;
+    g.rotation.x = lookY.current;
+    g.position.y = THREE.MathUtils.damp(g.position.y, (1 - ease) * -0.35, 4, d);
   });
 
   if (!Model) return null;
@@ -68,14 +90,19 @@ export default function ProductStage({
   reduced: boolean;
 }) {
   const rig = RIGS[family];
-  const host = useRef<HTMLDivElement>(null);
-  const visible = useInViewport(host, '220px');
+  /*
+   * No viewport gate of its own. On narrow screens this canvas sits inside a
+   * drawer with `overflow: hidden`, and an element clipped to nothing reports
+   * as not intersecting — which dropped frameloop to 'demand' and stopped the
+   * rotation dead. Visibility is the parent's call now; the stage only exists
+   * while its row is open anyway.
+   */
 
   return (
-    <div className="render-stage" ref={host}>
+    <div className="render-stage">
       <Canvas
         dpr={[1, 1.5]}
-        frameloop={reduced || !visible ? 'demand' : 'always'}
+        frameloop={reduced ? 'demand' : 'always'}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         camera={{ position: [0, 0.35, 5.4], fov: 32 }}
         style={{ pointerEvents: 'none' }}

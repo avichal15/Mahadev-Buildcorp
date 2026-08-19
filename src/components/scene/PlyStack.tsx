@@ -157,7 +157,10 @@ export default function PlyStack({
 
   useFrame((_state, delta) => {
     if (!root.current) return;
-    smooth.current = THREE.MathUtils.damp(smooth.current, scroll.current, 7, delta);
+    // Clamped for the same reason as the product rig: a stalled frame must not
+    // arrive as one huge step and snap the stack across.
+    const d = Math.min(delta, 0.05);
+    smooth.current = THREE.MathUtils.damp(smooth.current, scroll.current, 7, d);
     const p = smooth.current;
     const { x, y } = pointer.current;
 
@@ -166,27 +169,27 @@ export default function PlyStack({
     const targetY = x * 0.3;
     const targetX = -y * 0.16 + 0.06 + p * 0.2;
 
-    root.current.rotation.y = THREE.MathUtils.damp(root.current.rotation.y, targetY, 3, delta);
-    root.current.rotation.x = THREE.MathUtils.damp(root.current.rotation.x, targetX, 3, delta);
+    root.current.rotation.y = THREE.MathUtils.damp(root.current.rotation.y, targetY, 3, d);
+    root.current.rotation.x = THREE.MathUtils.damp(root.current.rotation.x, targetX, 3, d);
     // As the copy clears out, the stack drifts back to centre frame and takes
     // the whole shot.
     root.current.position.x = THREE.MathUtils.damp(
       root.current.position.x,
       anchorX * (1 - p * 0.85),
       3,
-      delta,
+      d,
     );
     root.current.position.y = THREE.MathUtils.damp(
       root.current.position.y,
       anchorY + p * 0.5,
       3,
-      delta,
+      d,
     );
 
     // Scroll dollies the camera into the stack. Kept short of the earlier
     // push-in, which filled the frame with stripes and lost the object.
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, 4.85 - p * 1.35, 3, delta);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, 0.34 - p * 0.42, 3, delta);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, 4.85 - p * 1.35, 3, d);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, 0.34 - p * 0.42, 3, d);
     camera.lookAt(0, anchorY * 0.5, 0);
   });
 

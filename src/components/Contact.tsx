@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BRANDS, CATALOG, SHOP, TOTAL_TYPES } from '../data/catalog';
-import { useOnceInViewport, useReducedMotion } from '../lib/hooks';
+import { useMediaQuery, useOnceInViewport, useReducedMotion } from '../lib/hooks';
 
 const STATS = [
   { value: TOTAL_TYPES, label: 'Types carried' },
@@ -72,6 +72,30 @@ export default function Contact() {
   }, []);
 
   const mapNear = mapSeen || mapDue;
+
+  /*
+   * A single tap must not hand the map the scroll. On a phone the map fills the
+   * screen, so capturing on first touch traps the reader mid-page with no
+   * obvious way out. Two deliberate taps unlock it instead.
+   *
+   * Detection is on pointerup rather than the dblclick event because dblclick
+   * is unreliable on touch, where the gesture is usually swallowed as zoom.
+   * One pointer path covers mouse and touch alike.
+   */
+  const coarse = useMediaQuery('(pointer: coarse)');
+  const lastTap = useRef(0);
+
+  const unlockGesture = useCallback(() => {
+    const now = performance.now();
+    if (now - lastTap.current < 340) {
+      lastTap.current = 0;
+      setMapInteractive(true);
+    } else {
+      lastTap.current = now;
+    }
+  }, []);
+
+  const unlockLabel = `Double ${coarse ? 'tap' : 'click'} to explore the map`;
 
   return (
     <section className="section contact" id="contact">
@@ -207,6 +231,25 @@ export default function Contact() {
               {/* Scan lines over the tiles — the last of the three overlays
                   that put the map in the same light as the page. */}
               <div className="location__wash" aria-hidden="true" />
+
+              {/* Sits over the tiles while locked, so it both catches the
+                  gesture and says what the gesture is. Keyboard users get a
+                  plain activation — they are not scrolling past it by thumb. */}
+              {!mapInteractive && (
+                <button
+                  className="location__mapUnlock"
+                  type="button"
+                  onPointerUp={unlockGesture}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setMapInteractive(true);
+                    }
+                  }}
+                >
+                  <span className="location__mapUnlockPill">{unlockLabel}</span>
+                </button>
+              )}
             </div>
             <div className="location__mapBar">
               <div className="location__marker">
@@ -225,7 +268,7 @@ export default function Contact() {
                   aria-pressed={mapInteractive}
                   onClick={() => setMapInteractive((current) => !current)}
                 >
-                  {mapInteractive ? 'Lock map scrolling' : 'Explore map'}
+                  {mapInteractive ? 'Lock map scrolling' : unlockLabel}
                 </button>
                 <a
                   className="location__directions"

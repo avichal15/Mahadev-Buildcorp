@@ -1074,6 +1074,7 @@ main {
 /* Rail ---------------------------------------------------------------- */
 
 .catalogue__rail {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1191,16 +1192,36 @@ main {
 
 
 
-/* The product, sitting inside the card the reader actually tapped. */
-.row__stage {
-  position: relative;
-  isolation: isolate;
-  margin: 2px clamp(12px, 3vw, 20px) clamp(14px, 3vw, 18px);
+/* Reserves the box the canvas will be placed over. Same footprint the old
+   in-row stage had, so the drawer's measured height is unchanged. */
+.row__stageSlot {
   height: clamp(210px, 46vw, 300px);
-  border-radius: var(--radius-sm);
+  margin: 2px clamp(12px, 3vw, 20px) clamp(14px, 3vw, 18px);
+}
+
+/* The one canvas, slid over whichever slot is open. Positioned by transform so
+   moving it never touches layout. */
+.rail__stageLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  isolation: isolate;
   overflow: hidden;
+  height: 0;
+  opacity: 0;
+  border-radius: var(--radius-sm);
   background: linear-gradient(168deg, var(--ink-3), var(--ink-2) 60%, var(--ink));
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 26%, transparent);
+  pointer-events: none;
+  will-change: transform, height;
+  transition: opacity 0.25s var(--ease);
+}
+
+.rail__stageLayer .stage__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .row__stageGlow {
@@ -1581,6 +1602,75 @@ a.contact__value:hover {
     transparent 60px
   );
   mix-blend-mode: screen;
+}
+
+/* The unlock target. Covers the tiles while locked: it catches the gesture,
+   keeps stray taps off the embed, and carries the instruction. */
+.location__mapUnlock {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  /* Kills the browser's own double-tap-to-zoom so the gesture is ours. */
+  touch-action: manipulation;
+  cursor: pointer;
+  transition:
+    background-color 0.5s var(--ease),
+    opacity 0.4s var(--ease);
+}
+
+.location__mapUnlockPill {
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: rgba(10, 7, 6, 0.82);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 194, 75, 0.4),
+    0 18px 44px -22px rgba(255, 122, 24, 0.9);
+  color: var(--honey);
+  font-family: var(--mono);
+  font-size: clamp(0.62rem, 0.82vw, 0.76rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  transform: translateY(6px);
+  transition:
+    transform 0.5s var(--ease),
+    background-color 0.4s var(--ease),
+    color 0.4s var(--ease);
+}
+
+/* Touch has no hover, so the instruction is simply always on. */
+@media (hover: hover) {
+  .location__mapUnlock {
+    opacity: 0;
+  }
+
+  .location__map:hover .location__mapUnlock,
+  .location__mapUnlock:focus-visible {
+    opacity: 1;
+    background: rgba(10, 7, 6, 0.22);
+  }
+
+  .location__map:hover .location__mapUnlockPill,
+  .location__mapUnlock:focus-visible .location__mapUnlockPill {
+    transform: none;
+  }
+
+  .location__mapUnlock:hover .location__mapUnlockPill {
+    background: var(--honey);
+    color: #1a0d02;
+  }
+}
+
+@media (max-width: 640px) {
+  .location__mapUnlockPill {
+    padding: 10px 16px;
+    letter-spacing: 0.1em;
+  }
 }
 
 /* Once unlocked the map is a real control again, so it takes pointer events
