@@ -55,6 +55,23 @@ export default function Contact() {
   const [mapInteractive, setMapInteractive] = useState(false);
   const stats = useRef<HTMLDListElement>(null);
   const statsInView = useOnceInViewport(stats);
+  const mapBlock = useRef<HTMLDivElement>(null);
+  // Generous margin so the tiles are already there by the time it is on screen.
+  const mapSeen = useOnceInViewport(mapBlock, '600px');
+  const [mapDue, setMapDue] = useState(false);
+
+  /*
+   * Backstop for the observer. The point of gating the iframe is to keep it out
+   * of the initial load, not to hide it — so once the page has settled, mount
+   * it regardless. Without this, an observer that never delivers would leave a
+   * reader with no map and no way to get one.
+   */
+  useEffect(() => {
+    const id = window.setTimeout(() => setMapDue(true), 2500);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const mapNear = mapSeen || mapDue;
 
   return (
     <section className="section contact" id="contact">
@@ -71,7 +88,7 @@ export default function Contact() {
 
           <div className="proof__col reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
             <p className="lede">
-              Tell us the size and the grade. No catalogue hunting, no sales pitch — we&rsquo;ll have
+              Tell us the size and the grade. No catalogue hunting, no sales pitch. We&rsquo;ll have
               it cut and at the counter.
             </p>
             <div>
@@ -167,15 +184,26 @@ export default function Contact() {
             </p>
           </div>
 
-          <div className="location__map">
+          <div className="location__map" ref={mapBlock}>
             <div className="location__mapViewport" data-interactive={mapInteractive || undefined}>
-              <iframe
-                title={`Interactive map to ${SHOP.name}`}
-                src={SHOP.mapsEmbedUrl}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                tabIndex={mapInteractive ? 0 : -1}
-              />
+              {/*
+               * The iframe is only put in the document once this block is close
+               * to view. `loading="lazy"` defers the network fetch but still
+               * creates a browsing context that runs its own scripts and
+               * compositing, which is what a map costs on a phone. Not
+               * rendering it at all until it is needed costs nothing.
+               */}
+              {mapNear ? (
+                <iframe
+                  title={`Interactive map to ${SHOP.name}`}
+                  src={SHOP.mapsEmbedUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  tabIndex={mapInteractive ? 0 : -1}
+                />
+              ) : (
+                <div className="location__mapPlaceholder" aria-hidden="true" />
+              )}
             </div>
             <div className="location__mapBar">
               <div className="location__marker">

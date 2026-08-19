@@ -15,8 +15,10 @@ export const SHOP = {
     pin: '250001',
   },
   mapsUrl: 'https://maps.app.goo.gl/pK4ciHmvFaW2UPMZA',
+  // Google's embed, restored. It is the heavier of the two, so the iframe is
+  // only mounted once the block scrolls into view — see Contact.
   mapsEmbedUrl:
-    'https://www.openstreetmap.org/export/embed.html?bbox=77.6990607%2C29.0347291%2C77.7150607%2C29.0447291&layer=mapnik&marker=29.0397291%2C77.7070607',
+    'https://www.google.com/maps?q=Mahadev%20Plywood%20And%20Hardware%20Near%20Isha%20Apartments%20Kaushalya%20Nagar%20Ekta%20Nagar%20Daurli%20Meerut%20Uttar%20Pradesh%20250001&output=embed',
 } as const;
 
 export const BRANDS = [

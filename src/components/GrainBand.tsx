@@ -49,7 +49,7 @@ export default function GrainBand() {
           <div className="grain__aside reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
             <p className="lede">
               A missing hinge costs a carpenter half a day riding between shops. We carry boards,
-              laminates, fittings, fasteners, adhesives and polish under one roof — so the job
+              laminates, fittings, fasteners, adhesives and polish under one roof. So, the job
               finishes on the day it started.
             </p>
             <p className="tag">Trade rates · Bulk supply · Site delivery on request</p>

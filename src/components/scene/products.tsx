@@ -1,6 +1,7 @@
 // oxlint-disable react/only-export-components -- a geometry library keyed by
 // category, not a component module; Fast Refresh does a full reload here.
 import { useMemo, type ReactNode } from 'react';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /* ---------------------------------------------------------------------------
@@ -644,8 +645,14 @@ function HandleModel() {
   const D = 1.05;
   const H = 0.52;
   const rod = useMemo(() => new THREE.CylinderGeometry(0.026, 0.026, 1, 8), []);
-  const uprights = 9;
-  const runners = 7;
+  // Every wire is its own draw call, and this basket is the heaviest model in
+  // the set. Thinning the weave on small screens costs almost nothing visually
+  // and roughly halves the calls.
+  const lean = useThree((s) => s.size.width) < 900;
+  const uprights = lean ? 6 : 9;
+  const runners = lean ? 5 : 7;
+  const stiles = lean ? 3 : 5;
+  const endBars = lean ? 3 : 4;
 
   return (
     <group rotation={[0.42, 0.56, 0]} scale={0.94} position={[0, 0.12, 0]}>
@@ -694,8 +701,8 @@ function HandleModel() {
           </mesh>
         ));
       })}
-      {Array.from({ length: 5 }, (_, i) => {
-        const x = -W / 2 + (i / 4) * W;
+      {Array.from({ length: stiles }, (_, i) => {
+        const x = -W / 2 + (i / (stiles - 1)) * W;
         return [-D / 2, D / 2].map((z) => (
           <mesh key={`u${i}${z}`} geometry={rod} position={[x, 0, z]} scale={[1, H, 1]}>
             <meshStandardMaterial {...STEEL_DARK} />
@@ -704,8 +711,8 @@ function HandleModel() {
       })}
       {/* Ends */}
       {[-W / 2, W / 2].map((x) =>
-        Array.from({ length: 4 }, (_, i) => {
-          const y = -H / 2 + (i / 3) * H;
+        Array.from({ length: endBars }, (_, i) => {
+          const y = -H / 2 + (i / (endBars - 1)) * H;
           return (
             <mesh
               key={`e${x}${i}`}
@@ -753,7 +760,9 @@ function HandleModel() {
 /* --- 12 Sheets, Mesh & Seals: woven jali --------------------------------- */
 
 function JaliModel() {
-  const bars = 13;
+  // Same reasoning as the basket: one draw call per wire, so the weave thins
+  // on small screens where the difference is invisible anyway.
+  const bars = useThree((s) => s.size.width) < 900 ? 9 : 13;
   const span = 2.0;
   const wire = useMemo(() => new THREE.CylinderGeometry(0.022, 0.022, span, 8), [span]);
   const idx = useMemo(() => Array.from({ length: bars }, (_, i) => i), [bars]);

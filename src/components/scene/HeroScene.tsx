@@ -37,9 +37,16 @@ export default function HeroScene({
     <Canvas
       /* Capped at 1.5: the bloom pass is resolution-bound, and past this the
          frame cost is what makes the scrub look choppy rather than the maths. */
-      dpr={[1, 1.5]}
+      dpr={compact ? [1, 1.25] : [1, 1.5]}
       frameloop={reduced || !active ? 'demand' : 'always'}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      /*
+       * antialias is off deliberately. With an EffectComposer in the scene the
+       * image is built in its own render targets and resolved through them, so
+       * MSAA on the default framebuffer is never sampled — it only costs
+       * memory and bandwidth, which is exactly what a phone has least of.
+       * Edge smoothing comes from the composer below instead.
+       */
+      gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
       camera={{ position: [0, 0.34, 4.85], fov: 36 }}
       style={{ pointerEvents: 'none' }}
     >
@@ -66,10 +73,14 @@ export default function HeroScene({
       {/* Bloom is what turns lit edges into light. Threshold is set above the
           ply's diffuse so only the veneer highlights, the shafts and the sun
           actually bleed — not the whole sheet. */}
-      <EffectComposer enabled={!reduced} multisampling={0}>
+      <EffectComposer enabled={!reduced} multisampling={compact ? 0 : 4}>
         <Bloom
           mipmapBlur
-          intensity={compact ? 0.85 : 1.35}
+          /* The bloom is a blur — it does not need full resolution to look
+             like light, and this is the single most expensive pass on a
+             phone. Quarter-res on mobile, just over half on desktop. */
+          resolutionScale={compact ? 0.25 : 0.55}
+          intensity={compact ? 0.9 : 1.35}
           luminanceThreshold={0.58}
           luminanceSmoothing={0.28}
           radius={0.78}

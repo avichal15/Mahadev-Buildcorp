@@ -181,6 +181,10 @@ html.lenis body {
     radial-gradient(38vw 38vw at 66% 84%, rgba(255, 194, 75, 0.17), transparent 68%),
     radial-gradient(30vw 30vw at 26% 76%, rgba(255, 90, 20, 0.14), transparent 66%);
   animation: drift 34s var(--ease-io) infinite alternate;
+  /* Promoted so the drift is a compositor transform rather than a repaint of
+     four very large gradients every frame. */
+  will-change: transform;
+  contain: strict;
 }
 
 @keyframes drift {
@@ -195,7 +199,10 @@ html.lenis body {
   }
 }
 
-/* Film grain. Keeps the big flat areas from looking like dead vector fills. */
+/* Film grain. Keeps the big flat areas from looking like dead vector fills.
+   `mix-blend-mode` on a fixed full-screen layer forces the browser to composite
+   everything beneath it on every frame, so it is desktop-only — phones get a
+   plain low-opacity overlay that costs nothing to blend. */
 .grain-overlay {
   position: fixed;
   inset: 0;
@@ -203,6 +210,7 @@ html.lenis body {
   pointer-events: none;
   opacity: 0.4;
   mix-blend-mode: overlay;
+  contain: strict;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
@@ -1519,6 +1527,16 @@ a.contact__value:hover {
   pointer-events: auto;
 }
 
+/* Holds the space at the same tone as the map tiles until the iframe is worth
+   mounting, so nothing shifts when it arrives. */
+.location__mapPlaceholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(60% 50% at 50% 45%, rgba(255, 255, 255, 0.55), transparent 70%),
+    #e6e0d6;
+}
+
 .location__mapBar {
   position: relative;
   z-index: 1;
@@ -1739,16 +1757,35 @@ a.contact__value:hover {
     display: none;
   }
 
+  /* Blending a full-screen layer, blurring a full-width backdrop and drifting
+     four huge gradients are all per-frame compositor work. On a phone they buy
+     atmosphere at the price of the scroll, which is a bad trade. */
   .grain-overlay {
-    opacity: 0.28;
+    mix-blend-mode: normal;
+    opacity: 0.16;
+  }
+
+  .atmosphere {
+    animation: none;
+    background:
+      radial-gradient(46vw 40vw at 18% 12%, rgba(255, 122, 24, 0.26), transparent 68%),
+      radial-gradient(50vw 44vw at 72% 82%, rgba(255, 194, 75, 0.15), transparent 70%);
   }
 
   /* The brand reads in full on a phone too — the lockup alone was not enough.
      Everything in the bar is sized down together so the name always fits
-     beside the number rather than being dropped. */
+     beside the number rather than being dropped. The blurred backdrop goes:
+     it re-snapshots the page behind a full-width fixed bar every frame. */
   .nav {
     padding-block: 11px;
     gap: 10px;
+    backdrop-filter: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 7, 6, 0.95),
+      rgba(10, 7, 6, 0.74) 62%,
+      rgba(10, 7, 6, 0)
+    );
   }
 
   .nav__logo {
