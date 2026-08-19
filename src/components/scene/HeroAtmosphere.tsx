@@ -96,7 +96,13 @@ function Shafts() {
 const sunFrag = /* glsl */ `
   precision highp float;
   uniform float uTime;
+  uniform float uShafts;
   varying vec2 vUv;
+
+  float shaft(float x, float c, float w) {
+    float d = (x - c) / w;
+    return exp(-d * d);
+  }
 
   void main() {
     vec2 c = vUv - vec2(0.68, 0.74);
@@ -107,14 +113,32 @@ const sunFrag = /* glsl */ `
     float halo = exp(-pow(r / (0.42 * breathe), 2.0)) * 0.5;
     float v = core + halo;
     vec3 warm = mix(vec3(1.0, 0.55, 0.16), vec3(1.0, 0.86, 0.6), core);
-    gl_FragColor = vec4(warm * v, v);
+    vec3 col = warm * v;
+
+    // Folded in only where a second full-screen pass would cost too much.
+    if (uShafts > 0.5) {
+      float a = -0.46;
+      vec2 p = vec2(vUv.x * cos(a) - vUv.y * sin(a), vUv.x * sin(a) + vUv.y * cos(a));
+      float t = uTime;
+      float sv = 0.0;
+      sv += shaft(p.x, 0.10 + 0.020 * sin(t * 0.28), 0.055) * 0.95;
+      sv += shaft(p.x, 0.52 + 0.022 * sin(t * 0.25 + 2.1), 0.070) * 0.80;
+      sv *= smoothstep(0.0, 0.30, vUv.y) * smoothstep(1.0, 0.62, vUv.y);
+      col += vec3(1.0, 0.56, 0.19) * sv * 0.42;
+      v += sv * 0.42;
+    }
+
+    gl_FragColor = vec4(col, v);
   }
 `;
 
-function SunGlow() {
+function SunGlow({ withShafts = false }: { withShafts?: boolean }) {
   const mesh = useFrustumFill(-4.2);
   const mat = useRef<THREE.ShaderMaterial>(null);
-  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  const uniforms = useMemo(
+    () => ({ uTime: { value: 0 }, uShafts: { value: withShafts ? 1 : 0 } }),
+    [withShafts],
+  );
 
   useFrame((_s, delta) => {
     if (mat.current) mat.current.uniforms.uTime.value += delta;
@@ -141,6 +165,7 @@ function SunGlow() {
 const dustVert = /* glsl */ `
   uniform float uTime;
   uniform float uPixelRatio;
+  uniform float uSizeScale;
   attribute float aSeed;
   attribute float aScale;
   varying float vFade;
@@ -156,7 +181,7 @@ const dustVert = /* glsl */ `
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = aScale * uPixelRatio * (95.0 / max(0.35, -mv.z));
+    gl_PointSize = aScale * uSizeScale * uPixelRatio * (95.0 / max(0.35, -mv.z));
 
     // Motes only catch the light near the shafts, and fade at the edges.
     float lit = smoothstep(-3.4, 1.6, p.x) * smoothstep(3.6, 0.2, p.x);
@@ -176,7 +201,7 @@ const dustFrag = /* glsl */ `
   }
 `;
 
-function Sawdust({ count = 1300 }: { count?: number }) {
+function Sawdust({ count = 1300, sizeScale = 1 }: { count?: number; sizeScale?: number }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const { gl } = useThree();
 
@@ -202,8 +227,12 @@ function Sawdust({ count = 1300 }: { count?: number }) {
   }, [count]);
 
   const uniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uPixelRatio: { value: Math.min(2, gl.getPixelRatio()) } }),
-    [gl],
+    () => ({
+      uTime: { value: 0 },
+      uPixelRatio: { value: Math.min(2, gl.getPixelRatio()) },
+      uSizeScale: { value: sizeScale },
+    }),
+    [gl, sizeScale],
   );
 
   useFrame((_s, delta) => {
@@ -228,9 +257,15 @@ function Sawdust({ count = 1300 }: { count?: number }) {
 export default function HeroAtmosphere({ compact = false }: { compact?: boolean }) {
   return (
     <>
-      <SunGlow />
-      <Sawdust count={compact ? 400 : 900} />
-      <Shafts />
+      {/*
+       * Each of these is a full-screen additive quad, and overdraw is what
+       * actually costs frames on a phone rather than triangle count. On small
+       * screens the shafts are folded into the sun's own pass so the whole
+       * atmosphere is one fill instead of two.
+       */}
+      <SunGlow withShafts={compact} />
+      <Sawdust count={compact ? 220 : 900} sizeScale={compact ? 0.7 : 1} />
+      {!compact && <Shafts />}
     </>
   );
 }

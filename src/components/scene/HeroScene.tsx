@@ -6,11 +6,11 @@ import PlyStack from './PlyStack';
 import HeroAtmosphere from './HeroAtmosphere';
 
 /** Reads the renderer's own measurement rather than a JS media query. */
-function Responsive({ onChange }: { onChange: (compact: boolean) => void }) {
+function Responsive({ onChange }: { onChange: (width: number) => void }) {
   const width = useThree((s) => s.size.width);
 
   useEffect(() => {
-    onChange(width < 900);
+    onChange(width);
   }, [width, onChange]);
 
   return null;
@@ -31,7 +31,14 @@ export default function HeroScene({
   reduced: boolean;
   active: boolean;
 }) {
-  const [compact, setCompact] = useState(false);
+  const [width, setWidth] = useState(1200);
+  const compact = width < 900;
+  /*
+   * Phones skip the bloom pass entirely. It is the most expensive thing in the
+   * scene and the least visible at this size — the emissive veneer edges still
+   * read without it, and the frames are worth more than the glow.
+   */
+  const bloom = width >= 640;
 
   return (
     <Canvas
@@ -50,7 +57,7 @@ export default function HeroScene({
       camera={{ position: [0, 0.34, 4.85], fov: 36 }}
       style={{ pointerEvents: 'none' }}
     >
-      <Responsive onChange={setCompact} />
+      <Responsive onChange={setWidth} />
 
       {/* Procedural studio, baked once — gives the veneer something to catch
           besides the direct lights. No HDRI download. */}
@@ -73,7 +80,7 @@ export default function HeroScene({
       {/* Bloom is what turns lit edges into light. Threshold is set above the
           ply's diffuse so only the veneer highlights, the shafts and the sun
           actually bleed — not the whole sheet. */}
-      <EffectComposer enabled={!reduced} multisampling={compact ? 0 : 4}>
+      <EffectComposer enabled={!reduced && bloom} multisampling={compact ? 0 : 4}>
         <Bloom
           mipmapBlur
           /* The bloom is a blur — it does not need full resolution to look

@@ -204,6 +204,9 @@ export default function Contact() {
               ) : (
                 <div className="location__mapPlaceholder" aria-hidden="true" />
               )}
+              {/* Scan lines over the tiles — the last of the three overlays
+                  that put the map in the same light as the page. */}
+              <div className="location__wash" aria-hidden="true" />
             </div>
             <div className="location__mapBar">
               <div className="location__marker">
